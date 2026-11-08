@@ -1,0 +1,2776 @@
+{
+  "report": "PEPA Management Dash",
+  "file": "pbix/PEPA Management Dash.pbix",
+  "status": "ok",
+  "auto_date_tables": 37,
+  "report_meta": {
+    "format": "PBIR",
+    "pages": [
+      {
+        "name": "Page 1",
+        "hidden": true,
+        "visuals": 2
+      },
+      {
+        "name": "Application Status",
+        "hidden": false,
+        "visuals": 10
+      },
+      {
+        "name": "Application Time",
+        "hidden": false,
+        "visuals": 12
+      },
+      {
+        "name": "Timesheet",
+        "hidden": true,
+        "visuals": 6
+      },
+      {
+        "name": "Complaint & Audit Time",
+        "hidden": false,
+        "visuals": 11
+      },
+      {
+        "name": "Team",
+        "hidden": false,
+        "visuals": 52
+      },
+      {
+        "name": "Audit & Complaint Status",
+        "hidden": false,
+        "visuals": 8
+      },
+      {
+        "name": "Commentary",
+        "hidden": true,
+        "visuals": 6
+      },
+      {
+        "name": "Effort on Application",
+        "hidden": true,
+        "visuals": 6
+      },
+      {
+        "name": "Duplicate of Timesheet",
+        "hidden": true,
+        "visuals": 6
+      }
+    ],
+    "dataset_id": "1b2ad4a9-674d-4e08-b99b-768fd3b61996",
+    "report_id": "3a22bf7f-c2a4-4de9-a1d1-e0cbf4bf0853",
+    "workspace_id": "93a819f8-e679-49fa-b610-0c54f3a53304"
+  },
+  "tables": [
+    {
+      "name": "Holidays",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [ObservedHoliday = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"ObservedHoliday\", type date}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "ObservedHoliday",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Long Date",
+          "description": null,
+          "source_column": "ObservedHoliday",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "Query1",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Power Query calculation (refresh timestamp)"
+      },
+      "expression": "let\n    // Get current UTC time\n    nowUtc = DateTimeZone.FixedUtcNow(),\n    \n    // Get a candidate local time assuming standard NZ time (UTC+12)\n    localCandidate = DateTimeZone.SwitchZone(nowUtc, 12),\n    localDate = DateTime.Date(localCandidate),\n    currentYear = Date.Year(localDate),\n    currentMonth = Date.Month(localDate),\n    \n    // Determine if DST is in effect.\n    // New Zealand DST is in effect from the last Sunday in September until the first Sunday in April.\n    // For dates in April or September, we check the specific boundary date.\n    isDST =\n        if currentMonth = 4 then\n            // For April, calculate the first Sunday of April.\n            let\n                april1 = #date(currentYear, 4, 1),\n                firstSundayApril = if Date.DayOfWeek(april1, Day.Sunday) = 0 \n                     then april1 \n                     else Date.AddDays(april1, 7 - Date.DayOfWeek(april1, Day.Sunday))\n            in\n                // If today is before the first Sunday, it's still DST.\n                localDate < firstSundayApril\n        else if currentMonth = 9 then\n            // For September, calculate the last Sunday of September.\n            let\n                sept30 = #date(currentYear, 9, 30),\n                lastSundaySept = Date.AddDays(sept30, -Date.DayOfWeek(sept30, Day.Sunday))\n            in\n                // If today is on or after the last Sunday, DST is active.\n                localDate >= lastSundaySept\n        else if currentMonth < 4 then\n            // January to March are in DST.\n            true\n        else if currentMonth > 9 then\n            // October to December are in DST.\n            true\n        else\n            // May, June, July, August are standard time.\n            false,\n    \n    // Choose the correct offset\n    offset = if isDST then 13 else 12,\n    \n    // Convert UTC to Wellington local time using the calculated offset.\n    localTime = DateTimeZone.SwitchZone(nowUtc, offset)\nin\n    localTime",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Query1",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "d/mm/yyyy h:nn AM/PM",
+          "description": null,
+          "source_column": "Query1",
+          "expression": null,
+          "used_in_report": true
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Commentary",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "458e2e36-d56a-4eec-9ba9-ffdc0b1faaff"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit/\", [ApiVersion = 15]),\n    #\"458e2e36-d56a-4eec-9ba9-ffdc0b1faaff\" = Source{[Id=\"458e2e36-d56a-4eec-9ba9-ffdc0b1faaff\"]}[Items],\n    #\"Renamed Columns\" = Table.RenameColumns(#\"458e2e36-d56a-4eec-9ba9-ffdc0b1faaff\",{{\"ID\", \"ID.1\"}}),\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"Renamed Columns\",{\"Commentary\", \"AppUID\", \"CommentDate\", \"AddedBy\", \"ELT\", \"Posted\", \"Approved\", \"TextPlain\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Commentary",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Commentary",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "CommentDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Long Date",
+          "description": null,
+          "source_column": "CommentDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ELT",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "ELT",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Posted",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Posted",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Approved",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "Approved",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "TextPlain",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TextPlain",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "AddedBy",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AddedBy",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Applications",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [
+          "ApplicationsArchive"
+        ],
+        "kind": "SharePoint list + append",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "62881d43-cd6b-4be9-b785-d4cde2bfcfb5"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"62881d43-cd6b-4be9-b785-d4cde2bfcfb5\" = Source{[Id=\"62881d43-cd6b-4be9-b785-d4cde2bfcfb5\"]}[Items],\n    #\"Appended Query\" = Table.Combine({#\"62881d43-cd6b-4be9-b785-d4cde2bfcfb5\", ApplicationsArchive}),\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"Appended Query\",{\"UID\", \"Regime\", \"Applicant\", \"PartialReceived\", \"CompleteReceived\", \"AssignedTo\", \"TotalWorkingDays\", \"JobClosed\", \"AppType\", \"Status\", \"PassedToDecider\", \"Acknowledged\", \"DecisionDate\"}),\n    #\"Filtered Rows\" = Table.SelectRows(#\"Removed Other Columns\", each [UID] <> null and [UID] <> \"\"),\n    #\"Sorted Rows\" = Table.Sort(#\"Filtered Rows\",{{\"UID\", Order.Ascending}})\nin\n    #\"Sorted Rows\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "UID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "UID",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Regime",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Regime",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Applicant",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Applicant",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "PartialReceived",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "PartialReceived",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "CompleteReceived",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "CompleteReceived",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AssignedTo",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AssignedTo",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "TotalWorkingDays",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "TotalWorkingDays",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "JobClosed",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "JobClosed",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "AppType",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppType",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "PassedToDecider",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "PassedToDecider",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Acknowledged",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Acknowledged",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "DecisionDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "DecisionDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Abbr",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "If([Regime]=\"Adventure Activities\",\"AAO\",If([Regime]=\"Amusement Devices\",\"ADR\",If([Regime]=\"Asbestos\",\"ASB\",If([Regime]=\"Compliance Certifiers\",\"CCR\",If([Regime]=\"CSL\",\"CSL\",If([Regime]=\"HS Controls\",\"HSC\",If([Regime]=\"Occupational Diving\",\"OCD\",If([Regime]=\"PECPR\",\"PCR\",If([Regime]=\"Exemptions\",\"EXE\")))))))))",
+          "used_in_report": true
+        },
+        {
+          "name": "Stage",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "IF(ISBLANK('Applications'[CompleteReceived]),\"Review\",IF(ISBLANK('Applications'[PassedToDecider]),\"Assess\",IF(ISBLANK('Applications'[DecisionDate]),\"Decide\",IF(ISBLANK('Applications'[JobClosed]),\"Notify\"))))",
+          "used_in_report": true
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Assignments",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "c3b18339-2ff6-4eeb-a854-75671434e0a8"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"c3b18339-2ff6-4eeb-a854-75671434e0a8\" = Source{[Id=\"c3b18339-2ff6-4eeb-a854-75671434e0a8\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"c3b18339-2ff6-4eeb-a854-75671434e0a8\",{\"AppUID\", \"AssignedTo\", \"AssignDate\", \"ReassignDate\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AssignedTo",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AssignedTo",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AssignDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "d/mm/yyyy",
+          "description": null,
+          "source_column": "AssignDate",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "ReassignDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "ReassignDate",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "RoleTable",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "a15c2d78-e7b4-4bc0-bf62-53053794b466"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"a15c2d78-e7b4-4bc0-bf62-53053794b466\" = Source{[Id=\"a15c2d78-e7b4-4bc0-bf62-53053794b466\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"a15c2d78-e7b4-4bc0-bf62-53053794b466\",{\"ID\", \"FirstName\", \"Surname\", \"NameInFull\", \"Email\", \"Role\", \"AAO\", \"ADR\", \"ASB\", \"OCD\", \"CSL\", \"CCR\", \"HSC\", \"PCR\", \"Approver\", \"Team\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "ID",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "ID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "FirstName",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "FirstName",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Surname",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Surname",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "NameInFull",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "NameInFull",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Email",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Email",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Role",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Role",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AAO",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "AAO",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ADR",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "ADR",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ASB",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "ASB",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "OCD",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "OCD",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "CSL",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "CSL",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "CCR",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "CCR",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "HSC",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "HSC",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "PCR",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "PCR",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Approver",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "Approver",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Team",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Team",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Minutes",
+          "data_type": "Double",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "COALESCE(\n    SUMX(\n        FILTER(TimesheetData, TimesheetData[Person] = RoleTable[ID]),\n        TimesheetData[Minutes]\n    ),\n    0\n)\n",
+          "used_in_report": false
+        },
+        {
+          "name": "Hours",
+          "data_type": "Double",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "[Minutes]/60",
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "TimesheetData",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [
+          "Applications",
+          "RoleTable",
+          "Salaries",
+          "TimesheetArchive"
+        ],
+        "kind": "SharePoint list + append",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "5493e186-37a5-4e3b-b31d-5de07b89f712"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"5493e186-37a5-4e3b-b31d-5de07b89f712\" = Source{[Id=\"5493e186-37a5-4e3b-b31d-5de07b89f712\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"5493e186-37a5-4e3b-b31d-5de07b89f712\",{\"Person\", \"Minutes\", \"AppUID\", \"StartTime\", \"EndTime\", \"Status\"}),\n    #\"Appended Query\" = Table.Combine({#\"Removed Other Columns\", TimesheetArchive}),\n    #\"Merged Queries\" = Table.NestedJoin(#\"Appended Query\", {\"AppUID\"}, Applications, {\"UID\"}, \"Applications\", JoinKind.LeftOuter),\n    #\"Merged Queries1\" = Table.NestedJoin(#\"Merged Queries\", {\"Person\"}, RoleTable, {\"ID\"}, \"RoleTable\", JoinKind.LeftOuter),\n    #\"Expanded RoleTable\" = Table.ExpandTableColumn(#\"Merged Queries1\", \"RoleTable\", {\"Role\"}, {\"RoleTable.Role\"}),\n    #\"Expanded Applications\" = Table.ExpandTableColumn(#\"Expanded RoleTable\", \"Applications\", {\"CompleteReceived\", \"PassedToDecider\", \"DecisionDate\"}, {\"Applications.CompleteReceived\", \"Applications.PassedToDecider\", \"Applications.DecisionDate\"}),\n    #\"Merged Queries2\" = Table.NestedJoin(#\"Expanded Applications\", {\"RoleTable.Role\"}, Salaries, {\"Role\"}, \"Salaries\", JoinKind.LeftOuter),\n    Custom1 = Table.AddColumn(#\"Merged Queries2\", \"WorkDate\", each Date.From([StartTime]), type date)\nin\n    Custom1",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Person",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Person",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Minutes",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Minutes",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "StartTime",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "StartTime",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "EndTime",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "EndTime",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "CalcStage",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "\nVAR StartTime = TimesheetData[StartTime]\nVAR WorkDate = DATEVALUE(StartTime)\nVAR Role = TimesheetData[PrimaryFunction]\nVAR IsLastAssess = TimesheetData[IsLastAssess]\nVAR IsDeciderPresent = TimesheetData[IsDeciderPresent]\n\nVAR ReceivedApp = TimesheetData[Applications.CompleteReceived]\n\nVAR PassedDecider =\n    LOOKUPVALUE(Applications[PassedToDecider], Applications[UID], TimesheetData[AppUID])\n\nVAR DecidedDate =\n    LOOKUPVALUE(Applications[DecisionDate], Applications[UID], TimesheetData[AppUID])\n\nRETURN\nSWITCH(\n    TRUE(),\n\n// Reviewers before or on received date\nRole = \"Review\" &&\n(ISBLANK(ReceivedApp) || WorkDate <= DATEVALUE(ReceivedApp)),\n    \"1. Review\",\n\n    // Reviewers between received and passed\n    Role = \"Review\" &&\n    (ISBLANK(PassedDecider) || StartTime < PassedDecider),\n        \"2. Assess\",\n\n    // Reviewers between passed and decided\n    Role = \"Review\" &&\n    (ISBLANK(DecidedDate) || StartTime < DecidedDate),\n        \"3. Decide\",\n\n    // Reviewers after decision\n    Role = \"Review\",\n        \"4. Notify\",\n\n    // Assessors before receieved complete\n    Role = \"Assess\" &&\n    (ISBLANK(ReceivedApp) ||\n    WorkDate < DATEVALUE(ReceivedApp)),\n        \"1. Review\",\n        \n    // Assessors on decision day – last one, no decider\n    Role = \"Assess\" &&\n    NOT ISBLANK(DecidedDate) &&\n    WorkDate = DATEVALUE(DecidedDate) &&\n    IsLastAssess &&\n    NOT IsDeciderPresent,\n        \"3. Decide\",\n\n    // Assessors on decision day – not last or decider present\n    Role = \"Assess\" &&\n    NOT ISBLANK(DecidedDate) &&\n    WorkDate = DATEVALUE(DecidedDate),\n        \"2. Assess\",\n\n    // Assessors before passed\n    Role = \"Assess\" &&\n    (ISBLANK(PassedDecider) || StartTime < PassedDecider),\n        \"2. Assess\",\n\n    // Assessors between passed and decided\n    Role = \"Assess\" &&\n    (ISBLANK(DecidedDate) || StartTime < DecidedDate),\n        \"2. Assess\",\n\n    // Deciders after passed\n    Role = \"Decide\" &&\n    NOT ISBLANK(PassedDecider) &&\n    StartTime >= PassedDecider,\n        \"3. Decide\",\n\n    // Deciders before passed (jumped the gun)\n    Role = \"Decide\",\n        \"2. Assess\",\n    Role=\"Monitor\", \"5. Monitor\",\n    // Catch-all\n    \"4. Notify\"\n)\n",
+          "used_in_report": true
+        },
+        {
+          "name": "Applications.CompleteReceived",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Applications.CompleteReceived",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Applications.PassedToDecider",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Applications.PassedToDecider",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Applications.DecisionDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Applications.DecisionDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "RoleTable.Role",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "RoleTable.Role",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "WorkDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Short Date",
+          "description": null,
+          "source_column": "WorkDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "IsLastAssess",
+          "data_type": "Boolean",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": null,
+          "expression": "\nVAR ThisAppUID = [AppUID]\nVAR ThisPerson = [Person]\nVAR ThisWorkDate = [WorkDate]\nRETURN\nCALCULATE(\n    MAXX(\n        FILTER(\n            AssessLastFlagExport,\n            AssessLastFlagExport[AppUID] = ThisAppUID\n            && AssessLastFlagExport[Person] = ThisPerson\n            && AssessLastFlagExport[WorkDate.1] = ThisWorkDate\n        ),\n        INT(AssessLastFlagExport[IsLastAssess])\n    )\n) = 1\n",
+          "used_in_report": false
+        },
+        {
+          "name": "PrimaryFunction",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "\nLOOKUPVALUE(\n    Salaries[PrimaryFunction],\n    Salaries[Role],\n        LOOKUPVALUE(\n            RoleTable[Role],\n            RoleTable[ID], TimesheetData[Person]\n        )\n)\n",
+          "used_in_report": false
+        },
+        {
+          "name": "IsDeciderPresent",
+          "data_type": "Boolean",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": null,
+          "expression": "\nVAR ThisAppUID = [AppUID]\nVAR ThisWorkDate = [WorkDate]\nRETURN\nCALCULATE(\n    MAXX(\n        FILTER(\n            AssessLastFlagExport,\n            AssessLastFlagExport[AppUID] = ThisAppUID\n            && AssessLastFlagExport[WorkDate.1] = ThisWorkDate\n        ),\n        INT(AssessLastFlagExport[IsDeciderPresent])\n    )\n) = 1\n",
+          "used_in_report": false
+        },
+        {
+          "name": "CreatedNZ",
+          "data_type": "DateTime",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": null,
+          "expression": "\nVAR RawDate = [StartTime]\nVAR Year = YEAR(RawDate)\n\n// Get the first Sunday in April\nVAR April1 = DATE(Year, 4, 1)\nVAR AprilOffset = WEEKDAY(April1, 2)  // Monday=1, Sunday=7\nVAR FirstSundayInApril = \n    IF(AprilOffset = 7, April1, April1 + (7 - AprilOffset))\n\n// Get the last Sunday in September\nVAR Sept30 = DATE(Year, 9, 30)\nVAR SeptOffset = WEEKDAY(Sept30, 2)  // Monday=1, Sunday=7\nVAR LastSundayInSept = Sept30 - SeptOffset + 1\n\n// Determine if it's daylight saving\nVAR IsNZDT = RawDate >= LastSundayInSept && RawDate < FirstSundayInApril\n\nRETURN\n    RawDate + IF(IsNZDT, TIME(13,0,0), TIME(12,0,0))\n",
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "StageOrder",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Stage = _t, Number = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Stage\", type text}, {\"Number\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Stage",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Stage",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Number",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Number",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Salaries",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Role = _t, Salary = _t, PrimaryFunction = _t, Column1 = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Role\", type text}, {\"Salary\", Currency.Type}}),\n    #\"Removed Columns\" = Table.RemoveColumns(#\"Changed Type\",{\"Column1\"})\nin\n    #\"Removed Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Role",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Role",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Salary",
+          "data_type": "Decimal",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\\$#,0.###############;-\\$#,0.###############;\\$#,0.###############",
+          "description": null,
+          "source_column": "Salary",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "PrimaryFunction",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "PrimaryFunction",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "AssessOnDecisionDay",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [
+          "TimesheetData"
+        ],
+        "kind": "Derived from other queries"
+      },
+      "expression": "let\n    Source = TimesheetData,\n    #\"Expanded Salaries\" = Table.ExpandTableColumn(Source, \"Salaries\", {\"PrimaryFunction\"}, {\"Salaries.PrimaryFunction\"}),\n    #\"Filtered Rows\" = Table.SelectRows(#\"Expanded Salaries\", each \n    [Salaries.PrimaryFunction] = \"Assess\" \n    or [Salaries.PrimaryFunction] = \"Decide\"\n),\n    #\"Filtered Rows1\" = Table.SelectRows(#\"Filtered Rows\", each [AppUID] <> null and [AppUID] <> \"\"),\n    Custom1 = Table.SelectRows(#\"Filtered Rows1\", each [StartTime] <> null and [Applications.DecisionDate] <> null),\n    #\"Grouped Rows\" = Table.Group(Custom1, {\"AppUID\", \"WorkDate\"}, {{\"GroupedRows\", each _, type table [Person=nullable number, Minutes=nullable number, AppUID=nullable text, StartTime=nullable datetime, EndTime=nullable datetime, WorkType=nullable text, Status=nullable text, Applications.CompleteReceived=nullable datetime, Applications.PassedToDecider=nullable datetime, Applications.DecisionDate=nullable datetime, RoleTable.Role=nullable text, Salaries.PrimaryFunction=nullable text, WorkDate=date]}}),\n    Custom3 = Table.AddColumn(#\"Grouped Rows\", \"Processed\", each \n    let\n        GroupedTable = [GroupedRows],\n        SortedTable = Table.Sort(GroupedTable, {{\"StartTime\", Order.Ascending}}),\n        WithIndex = Table.AddIndexColumn(SortedTable, \"Index\", 1, 1, Int64.Type),\n        RowCount = Table.RowCount(SortedTable),\n        WithIsLast = Table.AddColumn(WithIndex, \"IsLastAssess\", each [Index] = RowCount, type logical)\n    in\n        WithIsLast\n),\n    #\"Expanded Processed\" = Table.ExpandTableColumn(Custom3, \"Processed\", {\"Person\", \"Minutes\", \"AppUID\", \"StartTime\", \"EndTime\", \"WorkType\", \"Status\", \"Applications.CompleteReceived\", \"Applications.PassedToDecider\", \"Applications.DecisionDate\", \"RoleTable.Role\", \"Salaries.PrimaryFunction\", \"WorkDate\", \"Index\", \"IsLastAssess\"}, {\"Person\", \"Minutes\", \"AppUID.1\", \"StartTime\", \"EndTime\", \"WorkType\", \"Status\", \"Applications.CompleteReceived\", \"Applications.PassedToDecider\", \"Applications.DecisionDate\", \"RoleTable.Role\", \"Salaries.PrimaryFunction\", \"WorkDate.1\", \"Index\", \"IsLastAssess\"}),\n    Custom4 = Table.AddColumn(#\"Expanded Processed\", \"AssessorsWithIndex\", each \n    Table.AddIndexColumn(\n        Table.Sort(\n            Table.SelectRows([GroupedRows], each [Salaries.PrimaryFunction] = \"Assess\"),\n            {{\"StartTime\", Order.Ascending}}\n        ),\n        \"Index\", 1, 1, Int64.Type\n    )\n),\n    Custom5 = Table.AddColumn(#\"Custom4\", \"MaxIndex\", each \n    List.Max(Table.Column([AssessorsWithIndex], \"Index\"))\n),\n    Custom6 = Table.AddColumn(#\"Custom5\", \"AssessorsWithLastFlag\", each \n    let\n        maxIdx = [MaxIndex],\n        tableWithFlag = Table.AddColumn(\n            [AssessorsWithIndex],\n            \"IsLastAssess\",\n            each [Index] = maxIdx,\n            type logical\n        )\n    in\n        tableWithFlag\n),\n    #\"Expanded AssessorsWithLastFlag\" = Table.ExpandTableColumn(Custom6, \"AssessorsWithLastFlag\", {\"Person\", \"StartTime\", \"IsLastAssess\"}, {\"AssessorsWithLastFlag.Person\", \"AssessorsWithLastFlag.StartTime\", \"AssessorsWithLastFlag.IsLastAssess\"}),\n    #\"Filtered Rows2\" = Table.SelectRows(#\"Expanded AssessorsWithLastFlag\", each true),\n    #\"Changed Type\" = Table.TransformColumnTypes(#\"Filtered Rows2\",{{\"AssessorsWithLastFlag.IsLastAssess\", type logical}}),\n    #\"Removed Columns\" = Table.RemoveColumns(#\"Changed Type\",{\"GroupedRows\"}),\n    #\"Added Custom\" = Table.AddColumn(#\"Removed Columns\", \"CalcStage\", each let\n    role = [Salaries.PrimaryFunction],\n    start = [StartTime],\n    received = [Applications.CompleteReceived],\n    passed = [Applications.PassedToDecider],\n    decided = [Applications.DecisionDate],\n    isLast = [IsLastAssess]\nin\n    if role = \"Review\" or (received <> null and start < received) then\n        \"1. Review\"\n    else if role = \"Assess\" and (decided <> null and Date.From(start) = Date.From(decided)) then\n        if isLast then \"3. Decide\" else \"2. Assess\"\n    else if role = \"Assess\" and (passed <> null and start >= passed) then\n        \"3. Decide\"\n    else if role = \"Assess\" then\n        \"2. Assess\"\n    else if role = \"Decide\" then\n        \"3. Decide\"\n    else if passed <> null and start < passed then\n        \"2. Assess\"\n    else if decided <> null and start < decided then\n        \"3. Decide\"\n    else\n        \"4. Notify\"),\n    #\"Grouped Rows1\" = Table.Group(#\"Added Custom\", {\"AppUID\", \"WorkDate\"}, {{\"GroupedRows\", each _, type table [AppUID=nullable text, WorkDate=date, Person=number, Minutes=number, AppUID.1=text, StartTime=datetime, EndTime=datetime, WorkType=text, Status=text, Applications.CompleteReceived=nullable datetime, Applications.PassedToDecider=datetime, Applications.DecisionDate=datetime, RoleTable.Role=text, Salaries.PrimaryFunction=text, WorkDate.1=date, Index=number, IsLastAssess=logical, CalcStage=text]}}),\n    Custom2 = Table.AddColumn(#\"Grouped Rows1\", \"IsDeciderPresent\", each List.ContainsAny(\n    Table.Column([GroupedRows], \"Salaries.PrimaryFunction\"),\n    {\"Decide\"}\n)),\n    #\"Expanded GroupedRows\" = Table.ExpandTableColumn(Custom2, \"GroupedRows\", {\"AppUID\", \"WorkDate\", \"Person\", \"Minutes\", \"AppUID.1\", \"StartTime\", \"EndTime\", \"WorkType\", \"Status\", \"Applications.CompleteReceived\", \"Applications.PassedToDecider\", \"Applications.DecisionDate\", \"RoleTable.Role\", \"WorkDate.1\", \"Index\", \"IsLastAssess\", \"CalcStage\"}, {\"GroupedRows.AppUID\", \"GroupedRows.WorkDate\", \"GroupedRows.Person\", \"GroupedRows.Minutes\", \"GroupedRows.AppUID.1\", \"GroupedRows.StartTime\", \"GroupedRows.EndTime\", \"GroupedRows.WorkType\", \"GroupedRows.Status\", \"GroupedRows.Applications.CompleteReceived\", \"GroupedRows.Applications.PassedToDecider\", \"GroupedRows.Applications.DecisionDate\", \"GroupedRows.RoleTable.Role\", \"GroupedRows.WorkDate.1\", \"GroupedRows.Index\", \"GroupedRows.IsLastAssess\", \"GroupedRows.CalcStage\"})\nin\n    #\"Expanded GroupedRows\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "WorkDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Long Date",
+          "description": null,
+          "source_column": "WorkDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.AppUID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.WorkDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Long Date",
+          "description": null,
+          "source_column": "GroupedRows.WorkDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Person",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.Person",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Minutes",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.Minutes",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.AppUID.1",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.AppUID.1",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.StartTime",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "GroupedRows.StartTime",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.EndTime",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "GroupedRows.EndTime",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.WorkType",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.WorkType",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.Status",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Applications.CompleteReceived",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "GroupedRows.Applications.CompleteReceived",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Applications.PassedToDecider",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "GroupedRows.Applications.PassedToDecider",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Applications.DecisionDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "GroupedRows.Applications.DecisionDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.RoleTable.Role",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.RoleTable.Role",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.WorkDate.1",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Long Date",
+          "description": null,
+          "source_column": "GroupedRows.WorkDate.1",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.Index",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.Index",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.IsLastAssess",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "GroupedRows.IsLastAssess",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "GroupedRows.CalcStage",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "GroupedRows.CalcStage",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "IsDeciderPresent",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "IsDeciderPresent",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "AssessLastFlagExport",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [
+          "AssessOnDecisionDay"
+        ],
+        "kind": "Derived from other queries"
+      },
+      "expression": "let\n    Source = AssessOnDecisionDay,\n    #\"Removed Other Columns\" = Table.SelectColumns(Source,{\"AppUID\", \"GroupedRows.Person\", \"GroupedRows.WorkDate.1\", \"GroupedRows.IsLastAssess\", \"IsDeciderPresent\"}),\n    #\"Added Custom\" = Table.AddColumn(#\"Removed Other Columns\", \"IsLastAssessFinal\", each if [GroupedRows.IsLastAssess] = true and [IsDeciderPresent] = false then true else false),\n    #\"Renamed Columns\" = Table.RenameColumns(#\"Added Custom\",{{\"GroupedRows.IsLastAssess\", \"IsLastAssess\"}, {\"GroupedRows.WorkDate.1\", \"WorkDate.1\"}, {\"GroupedRows.Person\", \"Person\"}}),\n    #\"Added Custom1\" = Table.AddColumn(#\"Renamed Columns\", \"IsLastAssessInt\", each if [IsLastAssess] then 1 else 0),\n    #\"Changed Type\" = Table.TransformColumnTypes(#\"Added Custom1\",{{\"Person\", Int64.Type}, {\"IsDeciderPresent\", type logical}, {\"IsLastAssessFinal\", type logical}, {\"IsLastAssessInt\", Int64.Type}}),\n    #\"Filtered Rows\" = Table.SelectRows(#\"Changed Type\", each true)\nin\n    #\"Filtered Rows\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Person",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Person",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "WorkDate.1",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "Long Date",
+          "description": null,
+          "source_column": "WorkDate.1",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "IsLastAssess",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "IsLastAssess",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "IsDeciderPresent",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "IsDeciderPresent",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "IsLastAssessFinal",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "IsLastAssessFinal",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "IsLastAssessInt",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "IsLastAssessInt",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "TimesheetArchive",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "4fcaed04-b6a7-49f1-9622-4fb8c388c4f7"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"4fcaed04-b6a7-49f1-9622-4fb8c388c4f7\" = Source{[Id=\"4fcaed04-b6a7-49f1-9622-4fb8c388c4f7\"]}[Items],\n    Custom1 = Table.SelectColumns(#\"4fcaed04-b6a7-49f1-9622-4fb8c388c4f7\",{\"Person\", \"Minutes\", \"AppUID\", \"StartTime\", \"EndTime\", \"Status\"})\nin\n    Custom1",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Person",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Person",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Minutes",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Minutes",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "StartTime",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "StartTime",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "EndTime",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "EndTime",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "Complaints&Audits",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "52205575-9958-4af5-a218-240fc26e58a0"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit/\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"52205575-9958-4af5-a218-240fc26e58a0\" = Source{[Id=\"52205575-9958-4af5-a218-240fc26e58a0\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"52205575-9958-4af5-a218-240fc26e58a0\",{\"Title\", \"Subject\", \"Nature\"}),\n    #\"Renamed Columns\" = Table.RenameColumns(#\"Removed Other Columns\",{{\"Title\", \"AppUID\"}})\nin\n    #\"Renamed Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "AppUID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppUID",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Subject",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Subject",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Nature",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Nature",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "If('Complaints&Audits'[Nature]=\"Complaint\",LOOKUPVALUE('Complaints Tracker'[Status],'Complaints Tracker'[Reference],'Complaints&Audits'[AppUID],\"\"),LOOKUPVALUE('Audits'[Status],'Audits'[Reference],'Complaints&Audits'[AppUID],\"\"))",
+          "used_in_report": true
+        },
+        {
+          "name": "AllocatedTo",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "If('Complaints&Audits'[Nature]=\"Audit\",LOOKUPVALUE(Audits[Allocated to],Audits[Reference],'Complaints&Audits'[AppUID]),LOOKUPVALUE('Complaints Tracker'[Allocated to],'Complaints Tracker'[Reference],'Complaints&Audits'[AppUID]))",
+          "used_in_report": true
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Complaints Tracker",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/Portal_RAA",
+        "list_ids": [
+          "6a5b706a-6f92-4788-a5a3-f4d3770bf54d"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/Portal_RAA\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"6a5b706a-6f92-4788-a5a3-f4d3770bf54d\" = Source{[Id=\"6a5b706a-6f92-4788-a5a3-f4d3770bf54d\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"6a5b706a-6f92-4788-a5a3-f4d3770bf54d\",{\"Reference\", \"Complainant\", \"Category\", \"Sub Category\", \"Allocated to\", \"Status\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Reference",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Reference",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Complainant",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Complainant",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Category",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Category",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Sub Category",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Sub Category",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Allocated to",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Allocated to",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "Audits",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/Portal_RAA",
+        "list_ids": [
+          "0696da9a-17b0-4987-8347-63ebb56e2d84"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/Portal_RAA\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"0696da9a-17b0-4987-8347-63ebb56e2d84\" = Source{[Id=\"0696da9a-17b0-4987-8347-63ebb56e2d84\"]}[Items],\n    Custom1 = Table.RenameColumns(#\"0696da9a-17b0-4987-8347-63ebb56e2d84\",{{\"Assigned to\",\"Allocated to_\"}}),\n    #\"Removed Other Columns\" = Table.SelectColumns(Custom1,{\"Reference\", \"Authorisation Holder\", \"Allocated to\", \"Allocated to_\", \"Status\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Reference",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Reference",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Authorisation Holder",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Authorisation Holder",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Allocated to",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Allocated to",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Allocated to_",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Allocated to_",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "AuditStageOrder",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Stage = _t, Order = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Stage\", type text}, {\"Order\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Stage",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Stage",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Order",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Order",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "ComplaintStageOrder",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Stage = _t, Order = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Stage\", type text}, {\"Order\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Stage",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Stage",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Order",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Order",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "AuditStageOrder (2)",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Stage = _t, Order = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Stage\", type text}, {\"Order\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Stage",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Stage",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Order",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Order",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "ComplaintStageOrder (2)",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Stage = _t, Order = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Stage\", type text}, {\"Order\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Stage",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Stage",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Order",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Order",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "ApplicationsArchive",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit",
+        "list_ids": [
+          "201fb453-7d3e-4aa5-9cec-35bddd4a5b59"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/AuthorisationsandAdvisoryUnit-AuthandAdvisoryUnit/\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"201fb453-7d3e-4aa5-9cec-35bddd4a5b59\" = Source{[Id=\"201fb453-7d3e-4aa5-9cec-35bddd4a5b59\"]}[Items]\nin\n    #\"201fb453-7d3e-4aa5-9cec-35bddd4a5b59\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Regime",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Regime",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Applicant",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Applicant",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "PartialReceived",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "PartialReceived",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "CompleteReceived",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "CompleteReceived",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AssignedTo",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AssignedTo",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "TotalWorkingDays",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TotalWorkingDays",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "JobClosed",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "JobClosed",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "AppType",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "AppType",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Created",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Created",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Modified By",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Modified By",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Modified",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Modified",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "PassedToDecider",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "PassedToDecider",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Acknowledged",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Acknowledged",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "DecisionDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "DecisionDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "SupNames",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "SupNames",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Class",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Class",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "VartiationType",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "VartiationType",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Color Tag",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Color Tag",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Compliance Asset Id",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Compliance Asset Id",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ID",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "ID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Content Type",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Content Type",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Created By",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Created By",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Version",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Version",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Attachments",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Attachments",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Edit",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Edit",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Type",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Type",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Item Child Count",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Item Child Count",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Folder Child Count",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Folder Child Count",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Label setting",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Label setting",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Retention label",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Retention label",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Retention label Applied",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Retention label Applied",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Label applied by",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Label applied by",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Item is a Record",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Item is a Record",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "App Created By",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "App Created By",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "App Modified By",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "App Modified By",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "UID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "UID",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "DatePerson",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "kind": "DAX calculated table",
+        "references": []
+      },
+      "expression": "\nCROSSJOIN(\n    VALUES(RoleTable[ID]),         \n    VALUES(DateSlicer[Date])\n)\n",
+      "expression_language": "DAX",
+      "columns": [
+        {
+          "name": "ID",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Date",
+          "data_type": "DateTime",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "DateSlicer",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "kind": "DAX calculated table",
+        "references": []
+      },
+      "expression": "SELECTCOLUMNS(DateTable, \"Date\", DateTable[Date])",
+      "expression_language": "DAX",
+      "columns": [
+        {
+          "name": "Date",
+          "data_type": "DateTime",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": true
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "DateTable",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "kind": "DAX calculated table",
+        "references": []
+      },
+      "expression": "\nADDCOLUMNS(\n    CALENDAR(DATE(2020, 1, 1), DATE(2030, 12, 31)),\n    \"Year\", YEAR([Date]),\n    \"Month Number\", MONTH([Date]),\n    \"Month Name\", FORMAT([Date], \"MMMM\"),\n    \"Day\", DAY([Date]),\n    \"Weekday\", FORMAT([Date], \"dddd\"),\n    \"IsWeekend\", IF(WEEKDAY([Date], 2) > 5, TRUE(), FALSE())\n)",
+      "expression_language": "DAX",
+      "columns": [
+        {
+          "name": "Date",
+          "data_type": "DateTime",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Year",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Month Number",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Month Name",
+          "data_type": "String",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Day",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Weekday",
+          "data_type": "String",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "IsWeekend",
+          "data_type": "Boolean",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    }
+  ],
+  "measures": [
+    {
+      "table": "TimesheetData",
+      "name": "Hours",
+      "expression": "\n\n    CALCULATE(SUM(TimesheetData[Minutes]),Filter(TimesheetData,TimesheetData[StartTime] >= MIN('DateSlicer'[Date]) && TimesheetData[StartTime] <= MAX('DateSlicer'[Date]))) / 60\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "TimesheetData",
+      "name": "TotalCost",
+      "expression": "\nVAR Cost =\n    SUMX(\n        TimesheetData,\n        [Hours] *\n            (\n                LOOKUPVALUE(\n                    Salaries[Salary],\n                    Salaries[Role], RELATED(RoleTable[Role])\n                ) / 1816\n            )*1.65\n    )\nRETURN\n    COALESCE(Cost, 0)\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "TimesheetData",
+      "name": "Hours2",
+      "expression": "\nCOALESCE(\n    DIVIDE(\n        CALCULATE(\n            SUM(TimesheetData[Minutes]),\n            FILTER(\n                TimesheetData,\n                TimesheetData[StartTime] >= MIN('DateSlicer'[Date]) &&\n                TimesheetData[StartTime] <= MAX('DateSlicer'[Date])\n            )\n        ),\n        60\n    ),\n    0\n)\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RoleTable",
+      "name": "ExpectedHours",
+      "expression": "\nCALCULATE(\n    COUNTROWS(\n        FILTER(\n            CROSSJOIN(VALUES(RoleTable[ID]), VALUES(DateSlicer[Date])),\n            WEEKDAY(DateSlicer[Date], 2) <= 5\n                && NOT DateSlicer[Date] IN VALUES(Holidays[ObservedHoliday])\n        )\n    ) * 8\n)\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": false
+    },
+    {
+      "table": "RoleTable",
+      "name": "Utilisation",
+      "expression": "If(ISBLANK([Hours]/[ExpectedHours]),0,[Hours]/[ExpectedHours])",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "Applications",
+      "name": "Assigned Person",
+      "expression": "\nCALCULATE(\n    SELECTEDVALUE(RoleTable[NameInFull]),\n    USERELATIONSHIP(Applications[AssignedTo], RoleTable[ID])\n)\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "Applications",
+      "name": "Elapsed",
+      "expression": "\nDATEDIFF(\n    COALESCE(\n        MAX(Applications[PartialReceived]),\n        MAX(Applications[CompleteReceived])\n    ),\n    TODAY(),\n    DAY\n)\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "TimesheetData",
+      "name": "Hours3",
+      "expression": "\nIf(ISBLANK(SUM(TimesheetData[Minutes])),0,\n    DIVIDE(\n\n            SUM(TimesheetData[Minutes]),\n\n            \n       \n        60\n    )\n)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "TimesheetData",
+      "name": "CountofApps",
+      "expression": "DISTINCTCOUNT(TimesheetArchive[AppUID])",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": false
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "Assignments",
+      "from_column": "AppUID",
+      "to_table": "Applications",
+      "to_column": "UID",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "Commentary",
+      "from_column": "AppUID",
+      "to_table": "Applications",
+      "to_column": "UID",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TimesheetData",
+      "from_column": "AppUID",
+      "to_table": "Applications",
+      "to_column": "UID",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "Assignments",
+      "from_column": "AssignedTo",
+      "to_table": "RoleTable",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TimesheetData",
+      "from_column": "Person",
+      "to_table": "RoleTable",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TimesheetData",
+      "from_column": "CalcStage",
+      "to_table": "StageOrder",
+      "to_column": "Stage",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": false
+    },
+    {
+      "from_table": "Applications",
+      "from_column": "AssignedTo",
+      "to_table": "RoleTable",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": false
+    },
+    {
+      "from_table": "Applications",
+      "from_column": "Stage",
+      "to_table": "StageOrder",
+      "to_column": "Stage",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "RoleTable",
+      "from_column": "Role",
+      "to_table": "Salaries",
+      "to_column": "Role",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "AssessOnDecisionDay",
+      "from_column": "GroupedRows.RoleTable.Role",
+      "to_table": "Salaries",
+      "to_column": "Role",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TimesheetData",
+      "from_column": "AppUID",
+      "to_table": "Complaints&Audits",
+      "to_column": "AppUID",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "Complaints&Audits",
+      "from_column": "AppUID",
+      "to_table": "Complaints Tracker",
+      "to_column": "Reference",
+      "cardinality": "1:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "Complaints&Audits",
+      "from_column": "AppUID",
+      "to_table": "Audits",
+      "to_column": "Reference",
+      "cardinality": "1:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "Complaints&Audits",
+      "from_column": "Status",
+      "to_table": "AuditStageOrder",
+      "to_column": "Stage",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "Complaints&Audits",
+      "from_column": "Status",
+      "to_table": "ComplaintStageOrder",
+      "to_column": "Stage",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TimesheetData",
+      "from_column": "Status",
+      "to_table": "AuditStageOrder (2)",
+      "to_column": "Stage",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TimesheetData",
+      "from_column": "Status",
+      "to_table": "ComplaintStageOrder (2)",
+      "to_column": "Stage",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    }
+  ],
+  "used_fields": [
+    [
+      "Adventure Activities",
+      "CurrentMonth",
+      "measure"
+    ],
+    [
+      "Applications",
+      "Abbr",
+      "column"
+    ],
+    [
+      "Applications",
+      "AppType",
+      "column"
+    ],
+    [
+      "Applications",
+      "Applicant",
+      "column"
+    ],
+    [
+      "Applications",
+      "Assigned Person",
+      "measure"
+    ],
+    [
+      "Applications",
+      "Elapsed",
+      "measure"
+    ],
+    [
+      "Applications",
+      "JobClosed",
+      "column"
+    ],
+    [
+      "Applications",
+      "PartialReceived",
+      "column"
+    ],
+    [
+      "Applications",
+      "Regime",
+      "column"
+    ],
+    [
+      "Applications",
+      "Stage",
+      "column"
+    ],
+    [
+      "Applications",
+      "Status",
+      "column"
+    ],
+    [
+      "Applications",
+      "TotalWorkingDays",
+      "column"
+    ],
+    [
+      "Applications",
+      "UID",
+      "column"
+    ],
+    [
+      "AssessLastFlagExport",
+      "IsDeciderPresent",
+      "column"
+    ],
+    [
+      "AssessLastFlagExport",
+      "IsLastAssess",
+      "column"
+    ],
+    [
+      "Assignments",
+      "AssignDate",
+      "column"
+    ],
+    [
+      "AuditStageOrder",
+      "Stage",
+      "column"
+    ],
+    [
+      "AuditStageOrder (2)",
+      "Stage",
+      "column"
+    ],
+    [
+      "Commentary",
+      "ELT",
+      "column"
+    ],
+    [
+      "Commentary",
+      "TextPlain",
+      "column"
+    ],
+    [
+      "ComplaintStageOrder (2)",
+      "Stage",
+      "column"
+    ],
+    [
+      "Complaints&Audits",
+      "AllocatedTo",
+      "column"
+    ],
+    [
+      "Complaints&Audits",
+      "AppUID",
+      "column"
+    ],
+    [
+      "Complaints&Audits",
+      "Nature",
+      "column"
+    ],
+    [
+      "Complaints&Audits",
+      "Status",
+      "column"
+    ],
+    [
+      "Complaints&Audits",
+      "Subject",
+      "column"
+    ],
+    [
+      "DateSlicer",
+      "Date",
+      "column"
+    ],
+    [
+      "Query1",
+      "Query1",
+      "column"
+    ],
+    [
+      "RoleTable",
+      "NameInFull",
+      "column"
+    ],
+    [
+      "RoleTable",
+      "Team",
+      "column"
+    ],
+    [
+      "RoleTable",
+      "Utilisation",
+      "measure"
+    ],
+    [
+      "StageOrder",
+      "Stage",
+      "column"
+    ],
+    [
+      "TimesheetData",
+      "AppUID",
+      "column"
+    ],
+    [
+      "TimesheetData",
+      "CalcStage",
+      "column"
+    ],
+    [
+      "TimesheetData",
+      "EndTime",
+      "column"
+    ],
+    [
+      "TimesheetData",
+      "Hours",
+      "measure"
+    ],
+    [
+      "TimesheetData",
+      "Hours2",
+      "measure"
+    ],
+    [
+      "TimesheetData",
+      "Hours3",
+      "measure"
+    ],
+    [
+      "TimesheetData",
+      "StartTime",
+      "column"
+    ],
+    [
+      "TimesheetData",
+      "Status",
+      "column"
+    ],
+    [
+      "TimesheetData",
+      "TotalCost",
+      "measure"
+    ],
+    [
+      "TimesheetData",
+      "WorkType",
+      "column"
+    ]
+  ],
+  "unresolved_report_fields": [
+    "Adventure Activities[CurrentMonth]",
+    "TimesheetData[WorkType]"
+  ]
+}

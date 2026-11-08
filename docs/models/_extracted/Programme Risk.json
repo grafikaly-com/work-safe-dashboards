@@ -1,0 +1,994 @@
+{
+  "report": "Programme Risk",
+  "file": "pbix/Programme Risk.pbix",
+  "status": "ok",
+  "auto_date_tables": 8,
+  "report_meta": {
+    "format": "PBIR",
+    "pages": [
+      {
+        "name": "TreatDrillthrough",
+        "hidden": true,
+        "visuals": 4
+      },
+      {
+        "name": "Operations Issues",
+        "hidden": false,
+        "visuals": 31
+      },
+      {
+        "name": "Risks",
+        "hidden": false,
+        "visuals": 31
+      },
+      {
+        "name": "Issues",
+        "hidden": false,
+        "visuals": 31
+      },
+      {
+        "name": "RiskDrillthrough",
+        "hidden": true,
+        "visuals": 4
+      },
+      {
+        "name": "Operations Risks",
+        "hidden": false,
+        "visuals": 31
+      }
+    ],
+    "dataset_id": "a65eeb60-514d-4a43-ac68-d4d6bc272bc6",
+    "report_id": "7c4fecf5-4433-4478-99ab-dca27de24caf",
+    "workspace_id": "93a819f8-e679-49fa-b610-0c54f3a53304"
+  },
+  "tables": [
+    {
+      "name": "Junctions",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning",
+        "list_ids": [
+          "d516d85e-011b-49d7-ac9b-bd9f5bcb4688"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"d516d85e-011b-49d7-ac9b-bd9f5bcb4688\" = Source{[Id=\"d516d85e-011b-49d7-ac9b-bd9f5bcb4688\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"d516d85e-011b-49d7-ac9b-bd9f5bcb4688\",{\"RiskID\", \"TreatID\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "RiskID",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "RiskID",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "TreatID",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TreatID",
+          "expression": null,
+          "used_in_report": true
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "RiskRegister",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning",
+        "list_ids": [
+          "2ccf25d1-972a-4a32-9f3f-ce5b9eff5d15"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"2ccf25d1-972a-4a32-9f3f-ce5b9eff5d15\" = Source{[Id=\"2ccf25d1-972a-4a32-9f3f-ce5b9eff5d15\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"2ccf25d1-972a-4a32-9f3f-ce5b9eff5d15\",{\"Event\", \"Consequence\", \"ResidualLikelihood\", \"ResidualImpact\", \"ResidualRisk\", \"TargetLikelihood\", \"TargetImpact\", \"TargetRisk\", \"OwnedBy\", \"Programme\", \"Response\", \"TreatShareNotes\", \"Issue\", \"Retired\", \"Category\", \"RetiredDate\", \"ID\", \"Modified\", \"Created\",\"Draft\",\"Status\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Event",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Event",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Consequence",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Consequence",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "ResidualLikelihood",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "ResidualLikelihood",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "ResidualImpact",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "ResidualImpact",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "ResidualRisk",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "ResidualRisk",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "TargetLikelihood",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TargetLikelihood",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "TargetImpact",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TargetImpact",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "TargetRisk",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TargetRisk",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Programme",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Programme",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Response",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Response",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "TreatShareNotes",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "TreatShareNotes",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Issue",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "Issue",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Retired",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "Retired",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Category",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Category",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "ID",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "ID",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Modified",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Modified",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Created",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Created",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "RetiredDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "RetiredDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "OwnedBy",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "OwnedBy",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Treated",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "\nVAR Response = 'RiskRegister'[Response]\nVAR ActiveTreatmentCount =\n    CALCULATE(\n        DISTINCTCOUNT( TreatmentRegister[ID] ),\n        KEEPFILTERS( TREATAS( VALUES( Junctions[TreatID] ), TreatmentRegister[ID] ) ),\n        NOT ( TreatmentRegister[Status] IN { \"Completed\", \"Cancelled\" } )\n    )\nRETURN\nSWITCH(\n    TRUE(),\n    Response <> \"Treat\", \"N/A\",\n    ActiveTreatmentCount > 0, \"Yes\",\n    \"No\"\n)\n",
+          "used_in_report": true
+        },
+        {
+          "name": "Draft",
+          "data_type": "Boolean",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "\"TRUE\";\"TRUE\";\"FALSE\"",
+          "description": null,
+          "source_column": "Draft",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": true
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "TreatmentRegister",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning",
+        "list_ids": [
+          "3a000d89-0850-417a-aac6-6670c537cac0"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"3a000d89-0850-417a-aac6-6670c537cac0\" = Source{[Id=\"3a000d89-0850-417a-aac6-6670c537cac0\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"3a000d89-0850-417a-aac6-6670c537cac0\",{\"Description\", \"DueDate\", \"Status\", \"OwnedBy\", \"ID\", \"Modified\", \"Created\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Description",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Description",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "DueDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "DueDate",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "OwnedBy",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "OwnedBy",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ID",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "ID",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Modified",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Modified",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Created",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "Created",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Users",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "SharePoint list",
+        "site": "https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning",
+        "list_ids": [
+          "375dd0cc-f2de-48f8-8863-81b41a759523"
+        ]
+      },
+      "expression": "let\n    Source = SharePoint.Tables(\"https://worksafenz.sharepoint.com/sites/COLLABEnterprisePlanning\", [Implementation=\"2.0\", ViewMode=\"All\"]),\n    #\"375dd0cc-f2de-48f8-8863-81b41a759523\" = Source{[Id=\"375dd0cc-f2de-48f8-8863-81b41a759523\"]}[Items],\n    #\"Removed Other Columns\" = Table.SelectColumns(#\"375dd0cc-f2de-48f8-8863-81b41a759523\",{\"FullName\", \"Email\", \"Programme\", \"ID\"})\nin\n    #\"Removed Other Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "FullName",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "FullName",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Email",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Email",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Programme",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Programme",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ID",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "ID",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "ScoreSort",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [RiskScore = _t, SortOrder = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"RiskScore\", type text}, {\"SortOrder\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "RiskScore",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "RiskScore",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "SortOrder",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "SortOrder",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "StatusSort",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Status = _t, SortOrder = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Status\", type text}, {\"SortOrder\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Status",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Status",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "SortOrder",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "SortOrder",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "DateTable",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "kind": "DAX calculated table",
+        "references": []
+      },
+      "expression": "\nADDCOLUMNS(\n    CALENDAR(DATE(2020, 1, 1), DATE(2030, 12, 31)),\n    \"Year\", YEAR([Date]),\n    \"Month Number\", MONTH([Date]),\n    \"Month Name\", FORMAT([Date], \"MMMM\"),\n    \"Day\", DAY([Date]),    \"Year-Month\",    FORMAT ( [Date], \"yyyy-MM\" ),   -- text bucket\n    \"MonthStart\",    DATE ( YEAR ( [Date] ), MONTH ( [Date] ), 1 ),\n    \"Weekday\", FORMAT([Date], \"dddd\"),\n    \"IsWeekend\", IF(WEEKDAY([Date], 2) > 5, TRUE(), FALSE())\n)",
+      "expression_language": "DAX",
+      "columns": [
+        {
+          "name": "Date",
+          "data_type": "DateTime",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Year",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Month Number",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Month Name",
+          "data_type": "String",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Day",
+          "data_type": "Int64",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Year-Month",
+          "data_type": "String",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "MonthStart",
+          "data_type": "DateTime",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Weekday",
+          "data_type": "String",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "IsWeekend",
+          "data_type": "Boolean",
+          "column_type": "CalculatedTableColumn",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    }
+  ],
+  "measures": [
+    {
+      "table": "RiskRegister",
+      "name": "Retired30Days",
+      "expression": "If(COUNTROWS(FILTER('RiskRegister',RiskRegister[RetiredDate]>TODAY()-30))>0,COUNTROWS(FILTER('RiskRegister',RiskRegister[RetiredDate]>TODAY()-30)),0)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RiskRegister",
+      "name": "Created30Days",
+      "expression": "If(COUNTROWS(FILTER('RiskRegister',RiskRegister[Created]>TODAY()-30))>0,COUNTROWS(FILTER('RiskRegister',RiskRegister[Created]>TODAY()-30)),0)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RiskRegister",
+      "name": "IsTreated",
+      "expression": "\nVAR Response = SELECTEDVALUE('RiskRegister'[Response])\nVAR JunctionCount = COUNTROWS(Junctions)\nRETURN\nIF ( Response = \"Treat\", IF ( JunctionCount > 0, \"Yes\", \"No\" ), \"N/A\" )\n",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RiskRegister",
+      "name": "OverdueTreatmentCount",
+      "expression": "\nIf(CALCULATE(\n    COUNTROWS( TreatmentRegister ),\n    KEEPFILTERS( TREATAS( VALUES( Junctions[TreatID] ), TreatmentRegister[ID] ) ),\n    NOT ISBLANK( TreatmentRegister[DueDate] ),\n    TreatmentRegister[DueDate] < TODAY()\n)>0,CALCULATE(\n    COUNTROWS( TreatmentRegister ),\n    KEEPFILTERS( TREATAS( VALUES( Junctions[TreatID] ), TreatmentRegister[ID] ) ),\n    NOT ISBLANK( TreatmentRegister[DueDate] ),\n    TreatmentRegister[DueDate] < TODAY()),0)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RiskRegister",
+      "name": "HasOverdueTreatments",
+      "expression": "IF(\n[OverdueTreatmentCount] > 0,\"Yes\",\"No\")",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RiskRegister",
+      "name": "UntreatedCount",
+      "expression": "If(COUNTROWS(Filter('RiskRegister',RiskRegister[Treated]=\"No\"))>0,COUNTROWS(Filter('RiskRegister',RiskRegister[Treated]=\"No\")),0)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": true
+    },
+    {
+      "table": "RiskRegister",
+      "name": "DraftCount",
+      "expression": "If(COUNTROWS(FILTER('RiskRegister',RiskRegister[Draft]=TRUE))>0,COUNTROWS(FILTER('RiskRegister',RiskRegister[Draft]=TRUE)),0)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": false
+    },
+    {
+      "table": "RiskRegister",
+      "name": "PendingCount",
+      "expression": "If(COUNTROWS(FILTER('RiskRegister',RiskRegister[Status]=\"Pending\"))>0,COUNTROWS(FILTER('RiskRegister',RiskRegister[Status]=\"Pending\")),0)",
+      "display_folder": null,
+      "description": null,
+      "used_in_report": false
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "Junctions",
+      "from_column": "RiskID",
+      "to_table": "RiskRegister",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "Junctions",
+      "from_column": "TreatID",
+      "to_table": "TreatmentRegister",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "RiskRegister",
+      "from_column": "OwnedBy",
+      "to_table": "Users",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "TreatmentRegister",
+      "from_column": "OwnedBy",
+      "to_table": "Users",
+      "to_column": "ID",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": false
+    },
+    {
+      "from_table": "RiskRegister",
+      "from_column": "ResidualRisk",
+      "to_table": "ScoreSort",
+      "to_column": "RiskScore",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "TreatmentRegister",
+      "from_column": "Status",
+      "to_table": "StatusSort",
+      "to_column": "Status",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": true
+    },
+    {
+      "from_table": "ScoreSort",
+      "from_column": "SortOrder",
+      "to_table": "StatusSort",
+      "to_column": "SortOrder",
+      "cardinality": "1:1",
+      "cross_filter": "Both",
+      "active": false
+    }
+  ],
+  "used_fields": [
+    [
+      "Adventure Activities",
+      "CurrentMonth",
+      "measure"
+    ],
+    [
+      "Junctions",
+      "RiskID",
+      "column"
+    ],
+    [
+      "Junctions",
+      "TreatID",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Category",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Consequence",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Created30Days",
+      "measure"
+    ],
+    [
+      "RiskRegister",
+      "Draft",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Event",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "HasOverdueTreatments",
+      "measure"
+    ],
+    [
+      "RiskRegister",
+      "ID",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "IsTreated",
+      "measure"
+    ],
+    [
+      "RiskRegister",
+      "Issue",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "OverdueTreatmentCount",
+      "measure"
+    ],
+    [
+      "RiskRegister",
+      "Programme",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "ResidualImpact",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "ResidualLikelihood",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "ResidualRisk",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Response",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Retired",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Retired30Days",
+      "measure"
+    ],
+    [
+      "RiskRegister",
+      "Status",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "TargetImpact",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "TargetLikelihood",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "TargetRisk",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "TreatShareNotes",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "Treated",
+      "column"
+    ],
+    [
+      "RiskRegister",
+      "UntreatedCount",
+      "measure"
+    ],
+    [
+      "ScoreSort",
+      "RiskScore",
+      "column"
+    ],
+    [
+      "StatusSort",
+      "Status",
+      "column"
+    ],
+    [
+      "TreatmentRegister",
+      "Description",
+      "column"
+    ],
+    [
+      "TreatmentRegister",
+      "DueDate",
+      "column"
+    ],
+    [
+      "TreatmentRegister",
+      "ID",
+      "column"
+    ],
+    [
+      "TreatmentRegister",
+      "Status",
+      "column"
+    ],
+    [
+      "Users",
+      "FullName",
+      "column"
+    ]
+  ],
+  "unresolved_report_fields": [
+    "Adventure Activities[CurrentMonth]"
+  ]
+}

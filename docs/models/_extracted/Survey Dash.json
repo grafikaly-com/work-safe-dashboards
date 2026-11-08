@@ -1,0 +1,1066 @@
+{
+  "report": "Survey Dash",
+  "file": "pbix/Survey Dash.pbix",
+  "status": "ok",
+  "auto_date_tables": 4,
+  "report_meta": {
+    "format": "PBIR",
+    "pages": [
+      {
+        "name": "Main",
+        "hidden": false,
+        "visuals": 70
+      },
+      {
+        "name": "2A",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "2C",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "3A",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "3C",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "4A",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "4C",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "6A",
+        "hidden": true,
+        "visuals": 1
+      },
+      {
+        "name": "6C",
+        "hidden": true,
+        "visuals": 1
+      }
+    ],
+    "dataset_id": "42717c08-9605-4079-8155-84b47d10d05c",
+    "report_id": "9e13c1a6-ead0-4608-8f06-c0ee5c4d3503",
+    "workspace_id": "93a819f8-e679-49fa-b610-0c54f3a53304"
+  },
+  "tables": [
+    {
+      "name": "Live Responses",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Web API",
+        "url": "https://api.ubiquity.co.nz/surveys/sZXYBBJxa0GLSgjdYIPv9g/responses"
+      },
+      "expression": "let\n    Source = Json.Document(Web.Contents(\"https://api.ubiquity.co.nz/surveys/sZXYBBJxa0GLSgjdYIPv9g/responses?<query redacted>\")),\n    #\"Converted to Table\" = Source[responses],\n    #\"Converted to Table1\" = Table.FromList(#\"Converted to Table\", Splitter.SplitByNothing(), null, null, ExtraValues.Error),\n    #\"Expanded Column1\" = Table.ExpandRecordColumn(#\"Converted to Table1\", \"Column1\", {\"responseID\", \"data\", \"meta\", \"answers\"}, {\"Column1.responseID\", \"Column1.data\", \"Column1.meta\", \"Column1.answers\"}),\n    #\"Expanded Column1.data\" = Table.ExpandListColumn(#\"Expanded Column1\", \"Column1.data\"),\n    #\"Expanded Column1.data1\" = Table.ExpandRecordColumn(#\"Expanded Column1.data\", \"Column1.data\", {\"fieldID\", \"name\", \"value\", \"type\"}, {\"Column1.data.fieldID\", \"Column1.data.name\", \"Column1.data.value\", \"Column1.data.type\"}),\n    #\"Expanded Column1.meta\" = Table.ExpandListColumn(#\"Expanded Column1.data1\", \"Column1.meta\"),\n    #\"Expanded Column1.meta1\" = Table.ExpandRecordColumn(#\"Expanded Column1.meta\", \"Column1.meta\", {\"fieldID\", \"name\", \"value\", \"type\"}, {\"Column1.meta.fieldID\", \"Column1.meta.name\", \"Column1.meta.value\", \"Column1.meta.type\"}),\n    #\"Expanded Column1.answers\" = Table.ExpandListColumn(#\"Expanded Column1.meta1\", \"Column1.answers\"),\n    #\"Expanded Column1.answers1\" = Table.ExpandRecordColumn(#\"Expanded Column1.answers\", \"Column1.answers\", {\"fieldID\", \"value\", \"type\", \"questionType\", \"questionNumber\", \"text\"}, {\"Column1.answers.fieldID\", \"Column1.answers.value\", \"Column1.answers.type\", \"Column1.answers.questionType\", \"Column1.answers.questionNumber\", \"Column1.answers.text\"}),\n    #\"Grouped Rows\" = Table.Group(\n    #\"Expanded Column1.answers1\",\n    {\"Column1.responseID\", \"Column1.answers.questionNumber\"},\n    {\n        {\n            \"Count\",\n            each _,\n            type table [\n                Column1.responseID = text,\n                Column1.data.fieldID = text,\n                Column1.data.name = text,\n                Column1.data.value = any,\n                Column1.data.type = text,\n                Column1.meta.fieldID = text,\n                Column1.meta.name = text,\n                Column1.meta.value = nullable text,\n                Column1.meta.type = text,\n                Column1.answers.fieldID = text,\n                Column1.answers.value = nullable text,\n                Column1.answers.type = text,\n                Column1.answers.questionType = text,\n                Column1.answers.questionNumber = text,\n                Column1.answers.text = text\n            ]\n        },\n        {\n            \"ResponseDate\",\n            each                let\n                    dateRows = Table.SelectRows(_, each [Column1.meta.name] = \"Date\"),\n                    dateVal = List.First(List.RemoveNulls(dateRows[Column1.meta.value]))\n                in\n                    dateVal,\n            type datetime\n        }\n    }\n),\n    #\"Aggregated Count\" = Table.AggregateTableColumn(#\"Grouped Rows\", \"Count\", {{\"Column1.answers.value\", List.Max, \"Max of Column1.answers.value\"}}),\n    #\"Renamed Columns\" = Table.RenameColumns(#\"Aggregated Count\",{{\"Column1.responseID\", \"responseID\"}, {\"Column1.answers.questionNumber\", \"questionNumber\"}, {\"Max of Column1.answers.value\", \"answerValue\"}}),\n    #\"Pivoted Column\" = Table.Pivot(#\"Renamed Columns\", List.Distinct(#\"Renamed Columns\"[questionNumber]), \"questionNumber\", \"answerValue\"),\n    #\"Changed Type\" = Table.TransformColumnTypes(#\"Pivoted Column\",{{\"ResponseDate\", type datetime}}),\n    #\"Sorted Rows\" = Table.Sort(#\"Changed Type\",{{\"ResponseDate\", Order.Descending}}),\n    #\"Removed Columns\" = Table.RemoveColumns(#\"Sorted Rows\",{\"5A\"})\nin\n    #\"Removed Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "responseID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "responseID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "1A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "1A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "2A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "2C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "3A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "3C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "4C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "6A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "6C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Outcome",
+          "data_type": "String",
+          "column_type": "Calculated",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": null,
+          "expression": "if('Live Responses'[5A]=5,\"Approved\",\"Declined\")",
+          "used_in_report": false
+        },
+        {
+          "name": "ResponseDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "ResponseDate",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "Regimes",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Number = _t, Regime = _t, Abbr = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Number\", Int64.Type}, {\"Regime\", type text}, {\"Abbr\", type text}}),\n    #\"Added Index\" = Table.AddIndexColumn(#\"Changed Type\", \"Index\", 0, 1, Int64.Type),\n    #\"Replaced Value\" = Table.ReplaceValue(#\"Added Index\",3,5,Replacer.ReplaceValue,{\"Index\"}),\n    #\"Replaced Value1\" = Table.ReplaceValue(#\"Replaced Value\",4,3,Replacer.ReplaceValue,{\"Index\"}),\n    #\"Replaced Value2\" = Table.ReplaceValue(#\"Replaced Value1\",5,4,Replacer.ReplaceValue,{\"Index\"})\nin\n    #\"Replaced Value2\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Number",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Number",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Regime",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Regime",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "Abbr",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Abbr",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Index",
+          "data_type": "Double",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Index",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "ProblemTable",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Manual table (Enter Data)"
+      },
+      "expression": "let\n    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"<embedded data redacted>\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Response = _t, Number = _t]),\n    #\"Changed Type\" = Table.TransformColumnTypes(Source,{{\"Response\", type text}, {\"Number\", Int64.Type}})\nin\n    #\"Changed Type\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "Response",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "Response",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "Number",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "Number",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    },
+    {
+      "name": "Retrospective Responses",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [],
+        "kind": "Web API",
+        "url": "https://api.ubiquity.co.nz/surveys/QAAY9WwGI0CmEAjdYuCWbQ/responses"
+      },
+      "expression": "let\n    Source = Json.Document(Web.Contents(\"https://api.ubiquity.co.nz/surveys/QAAY9WwGI0CmEAjdYuCWbQ/responses?<query redacted>\")),\n    #\"Converted to Table\" = Source[responses],\n    #\"Converted to Table1\" = Table.FromList(#\"Converted to Table\", Splitter.SplitByNothing(), null, null, ExtraValues.Error),\n    #\"Expanded Column1\" = Table.ExpandRecordColumn(#\"Converted to Table1\", \"Column1\", {\"responseID\", \"data\", \"meta\", \"answers\"}, {\"Column1.responseID\", \"Column1.data\", \"Column1.meta\", \"Column1.answers\"}),\n    #\"Expanded Column1.data\" = Table.ExpandListColumn(#\"Expanded Column1\", \"Column1.data\"),\n    #\"Expanded Column1.data1\" = Table.ExpandRecordColumn(#\"Expanded Column1.data\", \"Column1.data\", {\"fieldID\", \"name\", \"value\", \"type\"}, {\"Column1.data.fieldID\", \"Column1.data.name\", \"Column1.data.value\", \"Column1.data.type\"}),\n    Custom1 = Table.ExpandListColumn(#\"Expanded Column1.data1\", \"Column1.meta\"),\n    Custom2 = Table.ExpandRecordColumn(#\"Custom1\", \"Column1.meta\", {\"fieldID\", \"name\", \"value\", \"type\"}, {\"Column1.meta.fieldID\", \"Column1.meta.name\", \"Column1.meta.value\", \"Column1.meta.type\"}),\n    Custom3 = Table.ExpandListColumn(#\"Custom2\", \"Column1.answers\"),\n    Custom4 = Table.ExpandRecordColumn(#\"Custom3\", \"Column1.answers\", {\"fieldID\", \"value\", \"type\", \"questionType\", \"questionNumber\", \"text\"}, {\"Column1.answers.fieldID\", \"Column1.answers.value\", \"Column1.answers.type\", \"Column1.answers.questionType\", \"Column1.answers.questionNumber\", \"Column1.answers.text\"}),\n    GroupedRows = Table.Group(\n    #\"Custom4\",\n    {\"Column1.responseID\", \"Column1.answers.questionNumber\"},\n    {\n        {\n            \"Count\",\n            each _,\n            type table [\n                Column1.responseID = text,\n                Column1.data.fieldID = text,\n                Column1.data.name = text,\n                Column1.data.value = any,\n                Column1.data.type = text,\n                Column1.meta.fieldID = text,\n                Column1.meta.name = text,\n                Column1.meta.value = nullable text,\n                Column1.meta.type = text,\n                Column1.answers.fieldID = text,\n                Column1.answers.value = nullable text,\n                Column1.answers.type = text,\n                Column1.answers.questionType = text,\n                Column1.answers.questionNumber = text,\n                Column1.answers.text = text\n            ]\n        },\n        {\n            \"ResponseDate\",\n            each                let\n                    dateRows = Table.SelectRows(_, each [Column1.meta.name] = \"Date\"),\n                    dateVal = List.First(List.RemoveNulls(dateRows[Column1.meta.value]))\n                in\n                    dateVal,\n            type datetime\n        }\n    }\n),\n    #\"Aggregated Count\" = Table.AggregateTableColumn(GroupedRows, \"Count\", {{\"Column1.answers.value\", List.Max, \"Max of Column1.answers.value\"}}),\n    #\"Renamed Columns\" = Table.RenameColumns(#\"Aggregated Count\",{{\"Column1.responseID\", \"responseID\"}, {\"Column1.answers.questionNumber\", \"questionNumber\"}, {\"Max of Column1.answers.value\", \"answerValue\"}}),\n    PivotedColumn = Table.Pivot(#\"Renamed Columns\", List.Distinct(#\"Renamed Columns\"[questionNumber]), \"questionNumber\", \"answerValue\"),\n    #\"Changed Type\" = Table.TransformColumnTypes(PivotedColumn,{{\"ResponseDate\", type datetime}}),\n    #\"Removed Columns\" = Table.RemoveColumns(#\"Changed Type\",{\"5A\"})\nin\n    #\"Removed Columns\"",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "responseID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "responseID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ResponseDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "ResponseDate",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "1A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "1A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6A",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6D",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": false
+    },
+    {
+      "name": "All Responses",
+      "hidden": false,
+      "description": null,
+      "source": {
+        "references": [
+          "Live Responses",
+          "Retrospective Responses"
+        ],
+        "kind": "Append of other queries"
+      },
+      "expression": "let\n    Source = Table.Combine({#\"Retrospective Responses\", #\"Live Responses\"})\nin\n    Source",
+      "expression_language": "M",
+      "columns": [
+        {
+          "name": "responseID",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "responseID",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "ResponseDate",
+          "data_type": "DateTime",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "General Date",
+          "description": null,
+          "source_column": "ResponseDate",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "1A",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "1A",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "2A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "2A",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "2B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "2C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "2C",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "2D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "2D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "3A",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "3B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "3C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "3C",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "3D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "3D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "4A",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "4B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "4C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "4C",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "4D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "4D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5C",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5C",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "5D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "5D",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6A",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "6A",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "6B",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6B",
+          "expression": null,
+          "used_in_report": false
+        },
+        {
+          "name": "6C",
+          "data_type": "Int64",
+          "column_type": "Data",
+          "hidden": false,
+          "format": "0",
+          "description": null,
+          "source_column": "6C",
+          "expression": null,
+          "used_in_report": true
+        },
+        {
+          "name": "6D",
+          "data_type": "String",
+          "column_type": "Data",
+          "hidden": false,
+          "format": null,
+          "description": null,
+          "source_column": "6D",
+          "expression": null,
+          "used_in_report": false
+        }
+      ],
+      "used_in_report": true
+    }
+  ],
+  "measures": [],
+  "relationships": [
+    {
+      "from_table": "Live Responses",
+      "from_column": "1A",
+      "to_table": "Regimes",
+      "to_column": "Number",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": false
+    },
+    {
+      "from_table": "Live Responses",
+      "from_column": "4C",
+      "to_table": "ProblemTable",
+      "to_column": "Number",
+      "cardinality": "M:1",
+      "cross_filter": "Single",
+      "active": false
+    },
+    {
+      "from_table": "Live Responses",
+      "from_column": "responseID",
+      "to_table": "All Responses",
+      "to_column": "responseID",
+      "cardinality": "1:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "All Responses",
+      "from_column": "1A",
+      "to_table": "Regimes",
+      "to_column": "Number",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    },
+    {
+      "from_table": "Retrospective Responses",
+      "from_column": "1A",
+      "to_table": "Regimes",
+      "to_column": "Number",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": false
+    },
+    {
+      "from_table": "All Responses",
+      "from_column": "4C",
+      "to_table": "ProblemTable",
+      "to_column": "Number",
+      "cardinality": "M:1",
+      "cross_filter": "Both",
+      "active": true
+    }
+  ],
+  "used_fields": [
+    [
+      "Adventure Activities",
+      "CurrentMonth",
+      "measure"
+    ],
+    [
+      "All Responses",
+      "1A",
+      "column"
+    ],
+    [
+      "All Responses",
+      "2A",
+      "column"
+    ],
+    [
+      "All Responses",
+      "2C",
+      "column"
+    ],
+    [
+      "All Responses",
+      "3A",
+      "column"
+    ],
+    [
+      "All Responses",
+      "3C",
+      "column"
+    ],
+    [
+      "All Responses",
+      "4A",
+      "column"
+    ],
+    [
+      "All Responses",
+      "4C",
+      "column"
+    ],
+    [
+      "All Responses",
+      "6A",
+      "column"
+    ],
+    [
+      "All Responses",
+      "6C",
+      "column"
+    ],
+    [
+      "All Responses",
+      "ResponseDate",
+      "column"
+    ],
+    [
+      "ProblemTable",
+      "Response",
+      "column"
+    ],
+    [
+      "Regimes",
+      "Abbr",
+      "column"
+    ]
+  ],
+  "unresolved_report_fields": [
+    "Adventure Activities[CurrentMonth]"
+  ]
+}
