@@ -13,11 +13,43 @@
 
 **Model:** 23 tables · 172 columns · 9 measures · 17 relationships. 37 hidden auto date/time tables (`LocalDateTable_*`) are left out.
 
+- [Business purpose](#business-purpose)
 - [Relationship diagram](#relationship-diagram)
 - [Tables](#tables)
 - [Table details](#table-details)
 - [Measures](#measures)
 - [Report pages](#report-pages)
+
+## Business purpose
+
+*Hand-written: edit `docs/models/_purpose/PEPA Management Dash.md`, not this section.*
+
+PEPA Management Dash gives the Authorisations and Advisory (A&A) management team a view, refreshed every two hours, of how much work the unit has on hand and where its staff time and cost go. It covers authorisation applications in nine regimes: Adventure Activities, Amusement Devices, Asbestos, Compliance Certifiers, CSL, HS Controls, Occupational Diving, PECPR and Exemptions. It also covers the complaints and audits passed over from the Compliance Monitoring Team. For the work itself, it tracks each application through Review, Assess, Decide and Notify, with how long it has been open, its status and who has it. For effort, it takes the time staff log in PEPA and splits it by person, team, regime, application and stage. It turns those hours into a salary-based cost and compares them with each person's expected working hours to give utilisation. The business outcome is better resourcing decisions. Managers can see who is overloaded or underused, where applications are queuing or getting old, which stages and regimes take the most effort, and what each application, regime, complaint or audit costs to process.
+
+*This purpose is inferred from the model and the report's five visible pages. The Master File records only who uses the report and how often it refreshes.*
+
+| Input | Where it comes from | What it adds to the outcome | Where it shows |
+|---|---|---|---|
+| **Applications**: `UID`, `Regime`, `Applicant`, `AppType`, `Status` | SharePoint `Applications` list, written by PEPA, SAGE and ACME and kept in step with the regime lists by the `Populate*UIDs` flows | The unit of work: what is on hand, for which regime and applicant. `UID` is what staff book time against | Application Status, Application Time, and the Regime slicer on every page |
+| **Application dates**: `PartialReceived`, `CompleteReceived`, `PassedToDecider`, `DecisionDate`, `JobClosed` | Same list, updated by the `*CloseDate` flows when a regime list changes | Sets each application's current `Stage` for the on-hand count by stage. `Elapsed` (days since received) shows how old each one is. Also decides which stage each timesheet entry belongs to | Application Status (On Hand Volume by Stage, Hours by Application) |
+| `TotalWorkingDays` | Applications list. Going by its description, the Update PEPA WorkingDays flow copies it in daily, but [lineage.md](../lineage.md) doesn't link that flow to this list yet | Processing time in working days (weekends and holidays excluded), the measure for statutory timeframes | Application Status and Application Time tables |
+| `AssignedTo`, plus **Assignments** `AssignDate` | Applications list, and the Assignments list PEPA writes to on each reassignment | Who owns each application and since when, so work can be rebalanced | Application Status table (Assigned Person, AssignDate) |
+| **TimesheetData**: `Person`, `Minutes`, `AppUID`, `StartTime`, `Status`, plus **TimesheetArchive** | Logged by staff in PEPA and ACME. The Timesheet Archive flow moves entries older than 30 days to the archive each night, and the model adds them back | The effort behind every hours figure, and through it cost and utilisation. Without the archive, the Period slicer could only reach back 30 days | Team, Application Time, Complaint & Audit Time |
+| **RoleTable**: `ID`, `NameInFull`, `Team`, `Role` | SharePoint list kept by the A&A team. The UpdateFullNames flow fills in `NameInFull` | Who did the work: names on charts, the Team slicer, and each person's salary band and main function. It also sets the headcount behind expected hours | Team (Hours by User), the name charts, the Team slicer |
+| **Salaries**: `Role`, `Salary`, `PrimaryFunction` | Manual table. The BI team updates it each year from HR banding | Turns hours into cost: hours × salary ÷ 1,816 annual hours × 1.65 loading. `PrimaryFunction` (Review, Assess, Decide or Monitor) sets the stage a person's time normally counts towards | Team page cost cards for each stage |
+| **AssessOnDecisionDay → AssessLastFlagExport** | Built in Power Query from TimesheetData | Marks the last assessor on an application's decision day, and whether a decider logged time that day. If no decider did, that assessor's time counts as Decide, so effort and cost are split across stages more fairly | Indirect, through `CalcStage` on every stage chart |
+| **Holidays**, **DateTable**, **DateSlicer** | Holidays is a manual table. The date tables are DAX, covering 2020–2030 | The Period slicer for all hours. Expected hours are 8 per weekday per person, minus public holidays. That figure is what `Utilisation` divides by | Period slicer, Team (Utilisation) |
+| **Complaints&Audits**: `AppUID`, `Subject`, `Nature` | SharePoint list, copied from the Compliance Monitoring Team's lists by the AuditTransfer and ComplaintTransfer flows | Puts complaints and audits in the same workload view, keeping time spent on them separate from application work | Complaint & Audit Time, Audit & Complaint Status |
+| **Complaints Tracker** and **Audits**: `Status`, `Allocated to` | Compliance Monitoring Team's lists on Portal_RAA, used by ACME | The current status and owner of each complaint or audit, for on-hand counts by status and by owner | Audit & Complaint Status |
+| **Stage-order tables**: StageOrder, AuditStageOrder, ComplaintStageOrder and their "(2)" copies | Manual tables kept by the BI team (Master File: "never change") | Put the stages in process order so each chart reads left to right | Every by-stage chart |
+| **Commentary**: `TextPlain`, `ELT` | SharePoint list written by SAGE. Reminder flows chase approval | Progress comments on applications, flagged for the ELT. It's only on a hidden page, so users don't see it today | Commentary page (hidden) |
+| **Query1** | Power Query: the refresh time in NZ time | Tells readers how up to date the figures are | Last refresh card on every page |
+
+Until the fixes in the [independent review evaluation](../independent-review-evaluation.md) are applied, the effort, cost and utilisation figures can't be fully trusted:
+
+- **Hours:** the date filter in the hours measures (DX-01, DX-02).
+- **Cost:** DX-04 and PQ-08.
+- **Expected hours:** DX-05, and PQ-07 for the missing holiday years.
 
 ## Relationship diagram
 

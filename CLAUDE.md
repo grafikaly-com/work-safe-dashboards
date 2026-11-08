@@ -46,6 +46,7 @@ $PY scripts/build_docs.py                            # JSON + xlsx -> docs/*.md,
   - **Documented:** the Master File row names the flow. Fuzzy matching covers typos such as `Commentary Reminder` vs the register's `Commnetary Reminder`.
   - **Inferred:** a register description mentions "<list name> list", or the flow is named after the list.
 - SharePoint lists are identified across models by (site, list GUID); display names come from the Master File's `Site - List - View` location.
+- Each model page's "Business purpose" section is hand-written in `docs/models/_purpose/<Report>.md`, and `build_docs.py` inserts it if that file exists. Edit that file, not the generated page.
 - Master File sheet names don't match pbix names exactly. When a dashboard is added or renamed, update `SHEET_TO_REPORT` in `build_docs.py`.
 
 ## Working with `.pbix` files
