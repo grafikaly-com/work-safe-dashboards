@@ -25,8 +25,10 @@ Regenerate the docs with `$PY` = that env's `python.exe`:
 ```sh
 $PY scripts/extract_pbix.py                          # all pbix -> docs/models/_extracted/<Report>.json
 $PY scripts/extract_pbix.py "pbix/Survey Dash.pbix"  # one model
-$PY scripts/build_docs.py                            # JSON + xlsx -> docs/*.md, docs/models/*.md, docs/Model Schema Register.xlsx
+$PY scripts/build_docs.py                            # JSON + xlsx -> docs/*.md, docs/models/*.md, docs/Model Schema Register v0.xlsx
 ```
+
+`docs/Model Schema Register v0.xlsx` is the generated register. `docs/Model Schema Register.xlsx` is a hand-maintained copy that adds the review findings, fix steps, a Pages sheet and the business purpose sheet. No script writes it, so record each change to it on its Change Log sheet.
 
 `extract_pbix.py` prints per-model counts plus `unresolved=N`, the number of report fields that point at tables or fields missing from the model. There are no tests. To check a change, rerun both scripts and diff `docs/`. To check Mermaid syntax, render the diagrams with `@mermaid-js/mermaid-cli`.
 

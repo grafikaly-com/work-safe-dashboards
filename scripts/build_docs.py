@@ -4,7 +4,8 @@ Inputs:  docs/models/_extracted/*.json (written by extract_pbix.py)
          xlsx/Dashboards Master File.xlsx
          xlsx/Power Automate Flow Master Register.xlsx
 Outputs: docs/README.md, docs/models/<Report>.md, docs/lineage.md, docs/gaps.md,
-         docs/Model Schema Register.xlsx
+         docs/Model Schema Register v0.xlsx (the generated register; docs/Model Schema Register.xlsx is
+         maintained by hand and never written here)
 
 The workbooks are read as cell values only; hyperlinks in them are never followed.
 
@@ -757,7 +758,11 @@ def write_index(models, gaps):
     out += ["", "- [lineage.md](lineage.md): SharePoint lists, other sources and Power Automate flows across all models.",
             f"- [gaps.md](gaps.md): {sum(counts.values())} findings, such as tables missing from the Master File "
             "and stale report fields.",
-            "- [Model Schema Register.xlsx](Model%20Schema%20Register.xlsx): the same data as filterable sheets.",
+            "- [Model Schema Register.xlsx](Model%20Schema%20Register.xlsx): the same data as filterable sheets, "
+            "plus review findings, fix steps, report pages and business purpose. Maintained by hand; "
+            "`build_docs.py` doesn't write it.",
+            "- [Model Schema Register v0.xlsx](Model%20Schema%20Register%20v0.xlsx): the generated register only, "
+            "rewritten on each `build_docs.py` run.",
             "- `models/_extracted/*.json`: raw extraction output (no row data; M code redacted).", ""]
     path = DOCS / "README.md"
     path.write_text("\n".join(out), encoding="utf-8")
@@ -867,7 +872,7 @@ def write_excel(models, index, gaps):
     sheet("Gaps", ["Model", "Check", "Item", "Detail"],
           [[g["model"], g["category"], g["item"], g["detail"]] for g in gaps], [28, 34, 40, 90])
 
-    path = DOCS / "Model Schema Register.xlsx"
+    path = DOCS / "Model Schema Register v0.xlsx"  # not the hand-maintained "Model Schema Register.xlsx"
     wb.save(path)
     return path
 

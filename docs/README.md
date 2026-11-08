@@ -16,5 +16,6 @@
 
 - [lineage.md](lineage.md): SharePoint lists, other sources and Power Automate flows across all models.
 - [gaps.md](gaps.md): 213 findings, such as tables missing from the Master File and stale report fields.
-- [Model Schema Register.xlsx](Model%20Schema%20Register.xlsx): the same data as filterable sheets.
+- [Model Schema Register.xlsx](Model%20Schema%20Register.xlsx): the same data as filterable sheets, plus review findings, fix steps, report pages and business purpose. Maintained by hand; `build_docs.py` doesn't write it.
+- [Model Schema Register v0.xlsx](Model%20Schema%20Register%20v0.xlsx): the generated register only, rewritten on each `build_docs.py` run.
 - `models/_extracted/*.json`: raw extraction output (no row data; M code redacted).
